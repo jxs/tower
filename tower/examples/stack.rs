@@ -1,16 +1,24 @@
 use futures::Future;
+use futures::future::lazy;
+use tokio;
 use tower::{Service, ServiceBuilder};
 
 pub fn main() {
-    let my_service = tower::service_fn(|request: &'static str| Ok::<_, &'static str>("omg what"));
+    tokio::run(lazy(|| {
+        let my_service = tower::service_fn(|_request| Ok::<_, &'static str>("omg what"));
 
-    let mut service = ServiceBuilder::new()
-        .concurrency_limit(100)
-        .buffer(5)
-        .service(my_service);
+        let mut service = ServiceBuilder::new()
+            .map_request(|request: &'static str| request.to_string())
+            .concurrency_limit(100)
+            .buffer(5)
+            .service(my_service);
 
-    assert!(service.poll_ready().is_ok());
+        assert!(service.poll_ready().is_ok());
 
-    let response = service.call("hello?").wait().unwrap();
-    println!("resp = {:?}", response);
+        service.call("hello?")
+            .map(|response| {
+                println!("resp = {:?}", response);
+            })
+            .map_err(|_| ())
+    }));
 }

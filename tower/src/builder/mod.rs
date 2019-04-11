@@ -226,12 +226,60 @@ impl ServiceBuilder<Identity> {
     }
 }
 
+use futures::Poll;
+use std::sync::Arc;
+
+/// WAT DOX
+pub struct MapRequest<F> {
+    f: Arc<F>,
+}
+
+/// WAT DOX
+pub struct MapRequestService<S, F> {
+    service: S,
+    f: Arc<F>,
+}
+
+impl<S, F, U, Request> Service<Request> for MapRequestService<S, F>
+where
+    F: Fn(Request) -> U,
+    S: Service<U>,
+{
+    type Response = S::Response;
+    type Error = S::Error;
+    type Future = S::Future;
+
+    fn poll_ready(&mut self) -> Poll<(), Self::Error> {
+        self.service.poll_ready()
+    }
+
+    fn call(&mut self, request: Request) -> Self::Future {
+        let request = (self.f)(request);
+        self.service.call(request)
+    }
+}
+
+impl<S, F> Layer<S> for MapRequest<F> {
+    type Service = MapRequestService<S, F>;
+
+    fn layer(&self, service: S) -> Self::Service {
+        let f = self.f.clone();
+        MapRequestService { service, f }
+    }
+}
+
 impl<L> ServiceBuilder<L> {
     /// Layer a new layer `T` onto the `ServiceBuilder`.
     pub fn layer<T>(self, layer: T) -> ServiceBuilder<Stack<T, L>> {
         ServiceBuilder {
             layer: Stack::new(layer, self.layer),
         }
+    }
+
+    /// WAT DOX
+    pub fn map_request<F>(self, f: F) -> ServiceBuilder<Stack<MapRequest<F>, L>> {
+        let f = Arc::new(f);
+        self.layer(MapRequest { f })
     }
 
     /// Buffer requests when when the next layer is out of capacity.
