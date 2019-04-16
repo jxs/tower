@@ -212,7 +212,7 @@ pub(super) type Error = Box<dyn std::error::Error + Send + Sync>;
 ///     .rate_limit(5, Duration::from_secs(1))
 ///     .service(MyService);
 /// ```
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ServiceBuilder<L> {
     layer: L,
 }

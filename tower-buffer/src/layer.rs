@@ -8,7 +8,7 @@ use std::marker::PhantomData;
 pub struct BufferLayer<Request, E = DefaultExecutor> {
     bound: usize,
     executor: E,
-    _p: PhantomData<Request>,
+    _p: PhantomData<fn(Request)>,
 }
 
 impl<Request> BufferLayer<Request, DefaultExecutor> {
