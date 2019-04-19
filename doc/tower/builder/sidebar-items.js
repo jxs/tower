@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["LayeredMakeService","Composed `MakeService` produced from `ServiceBuilder`"],["ServiceBuilder","Declaratively construct Service values."],["ServiceFuture","Async resolve the MakeService and wrap it with the layers"]]});
